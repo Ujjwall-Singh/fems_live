@@ -37,7 +37,7 @@ const Studentdash = () => {
       setLoading(true);
       try {
         console.log('Refreshing reviews for admission number:', studentInfo.admissionNo);
-        const response = await axios.get(`http://localhost:5000/api/review`);
+        const response = await axios.get(`${API_BASE_URL}/api/review`);
         console.log('All reviews from API during refresh:', response.data);
         
         // Filter reviews by the current student's admission number
