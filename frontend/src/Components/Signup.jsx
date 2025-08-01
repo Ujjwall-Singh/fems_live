@@ -39,7 +39,11 @@ const Signup = () => {
     }
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/signup`, {
+      const apiUrl = `${API_BASE_URL}/api/signup`;
+      console.log('Full API URL being called:', apiUrl);
+      console.log('API_BASE_URL value:', API_BASE_URL);
+      
+      const response = await axios.post(apiUrl, {
         email,
         name,
         password,

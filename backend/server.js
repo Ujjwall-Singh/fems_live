@@ -65,22 +65,23 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// CORS Configuration
-const corsOptions = {
-  origin: [
-    'http://localhost:3000', // Local development
-    'https://fems-live.vercel.app', // Production frontend
-    'https://fems-livebackend.vercel.app', // Backend self
-    /\.vercel\.app$/ // All Vercel domains
-  ],
-  credentials: true,
+// Simple CORS for production
+app.use(cors({
+  origin: ['https://fems-live.vercel.app', 'http://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 200
-};
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 
-app.use(cors(corsOptions));
 app.use(morgan('dev')); // Log requests
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', 'https://fems-live.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.sendStatus(200);
+});
 
 // MongoDB Connection
 const connectDB = async () => {
