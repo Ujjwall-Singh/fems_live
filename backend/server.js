@@ -70,11 +70,13 @@ const corsOptions = {
   origin: [
     'http://localhost:3000', // Local development
     'https://fems-live.vercel.app', // Production frontend
-    'https://fems-livebackend.vercel.app' // Backend self
+    'https://fems-livebackend.vercel.app', // Backend self
+    /\.vercel\.app$/ // All Vercel domains
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  optionsSuccessStatus: 200
 };
 
 app.use(cors(corsOptions));
