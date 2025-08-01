@@ -64,7 +64,20 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+
+// CORS Configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3000', // Local development
+    'https://fems-live.vercel.app', // Production frontend
+    'https://fems-livebackend.vercel.app' // Backend self
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(morgan('dev')); // Log requests
 
 // MongoDB Connection
