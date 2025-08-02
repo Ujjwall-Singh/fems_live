@@ -67,7 +67,7 @@ app.use(express.json());
 
 // Simple CORS for production
 app.use(cors({
-  origin: ['https://fems-live.vercel.app', 'http://localhost:3000'],
+  origin: ['https://fems-live.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
@@ -92,33 +92,47 @@ const connectDB = async () => {
     return true;
   }
 
-  if (!process.env.MONGO_URI) {
+  const mongoUri = process.env.MONGO_URI;
+  console.log('MONGO_URI exists:', !!mongoUri);
+  console.log('MONGO_URI length:', mongoUri ? mongoUri.length : 0);
+  
+  if (!mongoUri) {
     console.error('Error: MONGO_URI is not set in environment variables');
+    console.log('Available env vars:', Object.keys(process.env).filter(key => key.includes('MONGO')));
     return false;
   }
 
   try {
     console.log('Attempting to connect to MongoDB...');
+    console.log('Connection string preview:', mongoUri.substring(0, 20) + '...');
+    
     const options = {
-      serverSelectionTimeoutMS: 10000, // Increased timeout
+      serverSelectionTimeoutMS: 15000, // Increased timeout for serverless
       socketTimeoutMS: 45000,
-      bufferMaxEntries: 0,
-      bufferCommands: false,
       maxPoolSize: 10,
-      minPoolSize: 5,
+      minPoolSize: 1,
+      retryWrites: true,
+      w: 'majority'
     };
     
-    await mongoose.connect(process.env.MONGO_URI, options);
+    await mongoose.connect(mongoUri, options);
     isConnected = true;
     console.log('Connected to MongoDB successfully');
     return true;
   } catch (err) {
     console.error('Failed to connect to MongoDB:', err.message);
+    console.error('Error details:', err);
     isConnected = false;
     return false;
   }
 };
-connectDB();
+
+// Force connection on startup
+connectDB().then(success => {
+  console.log('Initial connection attempt:', success ? 'SUCCESS' : 'FAILED');
+}).catch(err => {
+  console.error('Initial connection error:', err.message);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -131,6 +145,19 @@ app.get('/health', (req, res) => {
       readyState: mongoose.connection.readyState,
       host: mongoose.connection.host
     }
+  });
+});
+
+// Debug endpoint for environment variables
+app.get('/debug-env', (req, res) => {
+  res.json({
+    mongoUriExists: !!process.env.MONGO_URI,
+    mongoUriLength: process.env.MONGO_URI ? process.env.MONGO_URI.length : 0,
+    nodeEnv: process.env.NODE_ENV,
+    adminEmail: process.env.ADMIN_EMAIL,
+    availableVars: Object.keys(process.env).filter(key => 
+      key.includes('MONGO') || key.includes('ADMIN') || key.includes('PORT')
+    )
   });
 });
 
@@ -165,7 +192,7 @@ app.use('/api/login', require('./routes/login'));
 app.use('/api/facultylogin', facultyRoute);
 app.use('/api/adminlogin', require('./routes/adminLogin'));
 app.use('/api/faculty', require('./routes/faculty'));
-app.use('/api/admin', require('./routes/admin')); // New advanced admin routes
+// app.use('/api/admin', require('./routes/admin')); // Temporarily disabled for debugging
 
 // Error Handler
 app.use((err, req, res, next) => {

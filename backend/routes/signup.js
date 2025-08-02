@@ -18,8 +18,6 @@ router.post('/', async (req, res) => {
       const options = {
         serverSelectionTimeoutMS: 10000,
         socketTimeoutMS: 45000,
-        bufferMaxEntries: 0,
-        bufferCommands: false,
         maxPoolSize: 10,
         minPoolSize: 5,
       };
