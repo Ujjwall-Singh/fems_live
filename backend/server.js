@@ -65,7 +65,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// Enhanced CORS configuration for production
+// Enhanced CORS configuration for production security
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
