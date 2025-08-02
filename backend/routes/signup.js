@@ -11,10 +11,24 @@ router.post('/', async (req, res) => {
 
   console.log('Signup request received:', { email, name, role, department, subject, phone: phone ? 'provided' : 'not provided' });
 
-  // Check database connection
+  // Check database connection and try to reconnect if needed
   if (mongoose.connection.readyState !== 1) {
-    console.error('Database not connected, readyState:', mongoose.connection.readyState);
-    return res.status(500).json({ error: 'Database connection error' });
+    console.log('Database not connected, attempting to reconnect...');
+    try {
+      const options = {
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        bufferMaxEntries: 0,
+        bufferCommands: false,
+        maxPoolSize: 10,
+        minPoolSize: 5,
+      };
+      await mongoose.connect(process.env.MONGO_URI, options);
+      console.log('Database reconnected successfully');
+    } catch (err) {
+      console.error('Failed to reconnect to database:', err.message);
+      return res.status(500).json({ error: 'Database connection failed', details: err.message });
+    }
   }
 
   try {

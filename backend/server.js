@@ -84,30 +84,38 @@ app.options('*', (req, res) => {
 });
 
 // MongoDB Connection
+let isConnected = false;
+
 const connectDB = async () => {
-  if (mongoose.connection.readyState === 1) {
+  if (isConnected && mongoose.connection.readyState === 1) {
     console.log('MongoDB already connected');
-    return; // already connected
+    return true;
   }
 
   if (!process.env.MONGO_URI) {
     console.error('Error: MONGO_URI is not set in environment variables');
-    return;
+    return false;
   }
 
   try {
     console.log('Attempting to connect to MongoDB...');
     const options = {
-      serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferMaxEntries: 0, // Disable mongoose buffering
-      bufferCommands: false, // Disable mongoose buffering
+      serverSelectionTimeoutMS: 10000, // Increased timeout
+      socketTimeoutMS: 45000,
+      bufferMaxEntries: 0,
+      bufferCommands: false,
+      maxPoolSize: 10,
+      minPoolSize: 5,
     };
     
     await mongoose.connect(process.env.MONGO_URI, options);
+    isConnected = true;
     console.log('Connected to MongoDB successfully');
+    return true;
   } catch (err) {
     console.error('Failed to connect to MongoDB:', err.message);
+    isConnected = false;
+    return false;
   }
 };
 connectDB();
@@ -117,8 +125,37 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'development',
+    database: {
+      connected: mongoose.connection.readyState === 1,
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host
+    }
   });
+});
+
+// Database test endpoint
+app.get('/test-db', async (req, res) => {
+  try {
+    // Force reconnection if needed
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    
+    // Test a simple database operation
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    res.json({ 
+      status: 'Database working', 
+      collections: collections.map(c => c.name),
+      connectionState: mongoose.connection.readyState
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Database test failed', 
+      details: error.message,
+      connectionState: mongoose.connection.readyState
+    });
+  }
 });
 
 // Routes
