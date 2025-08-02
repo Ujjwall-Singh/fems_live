@@ -1,6 +1,7 @@
 // routes/signup.js
 const express = require('express');
 const bcrypt = require('bcryptjs'); // Use bcryptjs consistently
+const mongoose = require('mongoose');
 const router = express.Router();
 const Faculty = require('../models/Faculty');
 const Student = require('../models/Student');
@@ -9,6 +10,12 @@ router.post('/', async (req, res) => {
   const { email, name, password, role, department, subject, phone } = req.body;
 
   console.log('Signup request received:', { email, name, role, department, subject, phone: phone ? 'provided' : 'not provided' });
+
+  // Check database connection
+  if (mongoose.connection.readyState !== 1) {
+    console.error('Database not connected, readyState:', mongoose.connection.readyState);
+    return res.status(500).json({ error: 'Database connection error' });
+  }
 
   try {
     // Validate required fields based on role

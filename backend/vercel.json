@@ -13,7 +13,7 @@
     }
   ],
   "env": {
-    "MONGO_URI": "mongodb+srv://ujjwalraj95083:EmSrmE9GRxOGz7pY@cluster0.4uru4ab.mongodb.net/fems_main",
+    "MONGO_URI": "mongodb+srv://ujjwalraj95083:EmSrmE9GRxOGz7pY@cluster0.4uru4ab.mongodb.net/fems_main?retryWrites=true&w=majority&serverSelectionTimeoutMS=5000",
     "ADMIN_EMAIL": "ujjwal@gmail.com",
     "ADMIN_PASSWORD": "ujjwal123",
     "ADMIN_NAME": "Ujjwal Singh"
