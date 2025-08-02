@@ -1,14 +1,15 @@
 import React from 'react';
-import { FaUsers, FaStar, FaChartLine, FaAward } from 'react-icons/fa';
+import { FaUsers, FaStar, FaChartLine, FaAward, FaUserGraduate } from 'react-icons/fa';
 
-const DashboardStats = ({ faculty, reviews }) => {
+const DashboardStats = ({ faculty, reviews, students = [] }) => {
   // Calculate statistics
   const totalFaculty = faculty.length;
   const totalReviews = reviews.length;
+  const totalStudents = students.length;
   
   // Calculate average rating
   const averageRating = reviews.length > 0 
-    ? (reviews.reduce((sum, review) => sum + (review.overallEvaluation || 0), 0) / reviews.length).toFixed(1)
+    ? parseFloat((reviews.reduce((sum, review) => sum + (parseFloat(review.overallEvaluation) || 0), 0) / reviews.length).toFixed(1))
     : 0;
 
   // Get unique departments
@@ -20,13 +21,25 @@ const DashboardStats = ({ faculty, reviews }) => {
 
   // Get top performing faculty (based on average ratings)
   const facultyRatings = faculty.map(f => {
-    const facultyReviews = reviews.filter(r => 
-      r.teacherName === f.name && r.teacherDepartment === f.department
-    );
-    const avgRating = facultyReviews.length > 0
-      ? facultyReviews.reduce((sum, r) => sum + (r.overallEvaluation || 0), 0) / facultyReviews.length
-      : 0;
-    return { ...f, avgRating, reviewCount: facultyReviews.length };
+    const facultyReviews = reviews.filter(r => {
+      const nameMatch = r.teacherName && f.name && 
+        r.teacherName.toLowerCase().trim() === f.name.toLowerCase().trim();
+      const deptMatch = r.teacherDepartment && f.department && 
+        r.teacherDepartment.toLowerCase().trim() === f.department.toLowerCase().trim();
+      return nameMatch && deptMatch;
+    });
+    
+    let avgRating = 0;
+    if (facultyReviews.length > 0) {
+      const totalRating = facultyReviews.reduce((sum, r) => sum + (parseFloat(r.overallEvaluation) || 0), 0);
+      avgRating = totalRating / facultyReviews.length;
+    }
+    
+    return { 
+      ...f, 
+      avgRating: parseFloat(avgRating.toFixed(1)), 
+      reviewCount: facultyReviews.length 
+    };
   });
 
   const topFaculty = facultyRatings
@@ -36,16 +49,20 @@ const DashboardStats = ({ faculty, reviews }) => {
 
   // Department statistics
   const departmentStats = departments.map(dept => {
-    const deptFaculty = faculty.filter(f => f.department === dept);
-    const deptReviews = reviews.filter(r => r.teacherDepartment === dept);
-    const avgRating = deptReviews.length > 0
-      ? (deptReviews.reduce((sum, r) => sum + (r.overallEvaluation || 0), 0) / deptReviews.length).toFixed(1)
-      : 0;
+    const deptFaculty = faculty.filter(f => f.department && f.department.toLowerCase().trim() === dept.toLowerCase().trim());
+    const deptReviews = reviews.filter(r => r.teacherDepartment && r.teacherDepartment.toLowerCase().trim() === dept.toLowerCase().trim());
+    
+    let avgRating = 0;
+    if (deptReviews.length > 0) {
+      const totalRating = deptReviews.reduce((sum, r) => sum + (parseFloat(r.overallEvaluation) || 0), 0);
+      avgRating = parseFloat((totalRating / deptReviews.length).toFixed(1));
+    }
+    
     return {
       department: dept,
       facultyCount: deptFaculty.length,
       reviewCount: deptReviews.length,
-      avgRating: parseFloat(avgRating)
+      avgRating: avgRating
     };
   });
 
@@ -56,6 +73,13 @@ const DashboardStats = ({ faculty, reviews }) => {
       icon: <FaUsers />,
       color: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
       description: 'Registered faculty members'
+    },
+    {
+      title: 'Total Students',
+      value: totalStudents,
+      icon: <FaUserGraduate />,
+      color: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+      description: 'Registered students'
     },
     {
       title: 'Total Reviews',
@@ -87,6 +111,7 @@ const DashboardStats = ({ faculty, reviews }) => {
         {statsCards.map((stat, index) => (
           <div key={index} className="stat-card">
             <div className="stat-icon" style={{ color: stat.color.includes('#8b5cf6') ? '#8b5cf6' : 
+              stat.color.includes('#3b82f6') ? '#3b82f6' :
               stat.color.includes('#c084fc') ? '#c084fc' : 
               stat.color.includes('#10b981') ? '#10b981' : '#f59e0b' }}>
               {stat.icon}

@@ -117,12 +117,13 @@ const AddReviewModal = ({ faculty, onClose, onAdd }) => {
       }
     }));
 
-    // Recalculate overall evaluation
+    // Recalculate overall evaluation - Fix: Use correct number of categories (12)
     const newRatings = {
       ...formData.ratings,
       [category]: parseInt(value)
     };
-    const overall = Object.values(newRatings).reduce((sum, rating) => sum + rating, 0) / 5;
+    const totalCategories = Object.keys(newRatings).length; // Should be 12
+    const overall = Object.values(newRatings).reduce((sum, rating) => sum + rating, 0) / totalCategories;
     
     setFormData(prev => ({
       ...prev,

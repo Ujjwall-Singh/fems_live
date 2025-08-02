@@ -192,6 +192,7 @@ app.use('/api/login', require('./routes/login'));
 app.use('/api/facultylogin', facultyRoute);
 app.use('/api/adminlogin', require('./routes/adminLogin'));
 app.use('/api/faculty', require('./routes/faculty'));
+app.use('/api/student', require('./routes/student'));
 // app.use('/api/admin', require('./routes/admin')); // Temporarily disabled for debugging
 
 // Error Handler
