@@ -18,6 +18,9 @@ import ReviewTable from './Components/adminchart';
 import EventCalendar from './Components/Calendar';
 import Services from './Components/Service';
 import ProfileCard from './Components/Profile';
+
+// Import backend connection test
+import './testConnection';
 import FacultyForm from './Components/Studentdashform';
 import Headercard from './Components/Dashboard/Student/Headercard';
 

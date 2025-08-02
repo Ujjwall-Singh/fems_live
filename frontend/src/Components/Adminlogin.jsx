@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import adminimg from "../Assets/adminimg.gif";
 import logo from "../Assets/logo.png";
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import API_BASE_URL from '../config/api';
+import axiosInstance from '../utils/axiosConfig';
 
 const Adminlogin = () => {
   const [email, setEmail] = useState('');
@@ -16,10 +15,13 @@ const Adminlogin = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/adminlogin`, {
+      console.log('Attempting admin login...');
+      const response = await axiosInstance.post('/api/adminlogin', {
         email,
         password
       });
+
+      console.log('Login response:', response.data);
 
       if (response.data.success) {
         // Store admin info in localStorage
@@ -30,10 +32,22 @@ const Adminlogin = () => {
         }));
         alert('Admin login successful!');
         navigate('/admindash');
+      } else {
+        alert(response.data.error || 'Login failed');
       }
     } catch (error) {
       console.error('Admin login error:', error);
-      alert(error.response?.data?.error || 'Login failed');
+      let errorMessage = 'Login failed';
+      
+      if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Cannot connect to server. Please check if backend is running.';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -65,23 +65,53 @@ const app = express();
 // Middleware
 app.use(express.json());
 
-// Simple CORS for production
+// Enhanced CORS configuration for production
 app.use(cors({
-  origin: ['https://fems-live.vercel.app', 'http://localhost:3000', 'https://localhost:3000'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    const allowedOrigins = [
+      'https://fems-live.vercel.app',
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false,
+  optionsSuccessStatus: 200 // For legacy browser support
 }));
 
 app.use(morgan('dev')); // Log requests
 
-// Handle preflight requests
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', 'https://fems-live.vercel.app');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.sendStatus(200);
-});
+// Enhanced preflight handling
+app.options('*', cors({
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://fems-live.vercel.app',
+      'http://localhost:3000',
+      'https://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
+    
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false,
+  optionsSuccessStatus: 200
+}));
 
 // MongoDB Connection
 let isConnected = false;
@@ -186,6 +216,24 @@ app.get('/test-db', async (req, res) => {
 });
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'FEMS Backend API is running!', 
+    timestamp: new Date().toISOString(),
+    endpoints: [
+      '/health',
+      '/debug-env', 
+      '/test-db',
+      '/api/adminlogin',
+      '/api/facultylogin',
+      '/api/login',
+      '/api/signup',
+      '/api/faculty',
+      '/api/review'
+    ]
+  });
+});
+
 app.use('/api/review', require('./routes/review'));
 app.use('/api/signup', require('./routes/signup'));
 app.use('/api/login', require('./routes/login'));
