@@ -86,6 +86,7 @@ app.options('*', (req, res) => {
 // MongoDB Connection
 const connectDB = async () => {
   if (mongoose.connection.readyState === 1) {
+    console.log('MongoDB already connected');
     return; // already connected
   }
 
@@ -95,13 +96,23 @@ const connectDB = async () => {
   }
 
   try {
+    console.log('Attempting to connect to MongoDB...');
     await mongoose.connect(process.env.MONGO_URI);
-    console.log('Connected to MongoDB');
+    console.log('Connected to MongoDB successfully');
   } catch (err) {
     console.error('Failed to connect to MongoDB:', err.message);
   }
 };
 connectDB();
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Routes
 app.use('/api/review', require('./routes/review'));
@@ -110,6 +121,7 @@ app.use('/api/login', require('./routes/login'));
 app.use('/api/facultylogin', facultyRoute);
 app.use('/api/adminlogin', require('./routes/adminLogin'));
 app.use('/api/faculty', require('./routes/faculty'));
+app.use('/api/admin', require('./routes/admin')); // New advanced admin routes
 
 // Error Handler
 app.use((err, req, res, next) => {

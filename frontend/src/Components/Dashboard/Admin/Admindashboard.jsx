@@ -20,6 +20,7 @@ import EditFacultyModal from './EditFacultyModal';
 import AddReviewModal from './AddReviewModal';
 import EditReviewModal from './EditReviewModal';
 import ConfirmationModal from './ConfirmationModal';
+import EnhancedAdminDashboard from './EnhancedAdminDashboard'; // Import the new enhanced dashboard
 import API_BASE_URL from '../../../config/api';
 import './AdminDashboard.css';
 
@@ -297,6 +298,12 @@ const AdminDashboard = () => {
           <FaChartBar /> Dashboard
         </button>
         <button 
+          className={`tab ${activeTab === 'enhanced' ? 'active' : ''}`}
+          onClick={() => setActiveTab('enhanced')}
+        >
+          <FaChartBar /> Enhanced Dashboard
+        </button>
+        <button 
           className={`tab ${activeTab === 'faculty' ? 'active' : ''}`}
           onClick={() => setActiveTab('faculty')}
         >
@@ -341,6 +348,16 @@ const AdminDashboard = () => {
           <DashboardStats 
             faculty={faculty} 
             reviews={reviews} 
+          />
+        )}
+        
+        {activeTab === 'enhanced' && (
+          <EnhancedAdminDashboard
+            data={{
+              reviews,
+              faculty,
+              students: [] // You can fetch students data separately if needed
+            }}
           />
         )}
         
